@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sombra no Labirinto | Horror Experimental</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&family=Playfair+Display:ital,wght@1,700&display=swap"
+        rel="stylesheet">
+
+    <!-- Bibliotecas Clássicas (Funcionam sem servidor local) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/controls/PointerLockControls.js"></script>
+</head>
+
+<body>
+    <div id="game-container">
+        <div id="hud">
+            <div id="timer-container">
+                <span id="timer-label">RESTANTE</span>
+                <span id="timer-value">05:00</span>
+            </div>
+            <div id="stamina-bar-container">
+                <div id="stamina-bar"></div>
+            </div>
+            <div id="interaction-prompt">Pressione [E] para Interagir</div>
+        </div>
+
+        <div id="menu-overlay" class="overlay">
+            <h1 class="glitch" data-text="O LABIRINTO">O LABIRINTO</h1>
+            <p>Sobreviva por 5 minutos. Ele está vindo.</p>
+            <button id="start-button">INICIAR JOGO</button>
+            <div id="controls-hint">
+                [W,A,S,D] Movimento | [SHIFT] Correr | [E] Esconder | [Mouse] Olhar
+            </div>
+        </div>
+
+        <div id="game-over-overlay" class="overlay hidden">
+            <h1 class="death-text">VOCÊ FOI PEGO</h1>
+            <button id="restart-button">TENTAR NOVAMENTE</button>
+        </div>
+
+        <div id="win-overlay" class="overlay hidden">
+            <h1 class="win-text">A PORTA SE ABRE</h1>
+            <button id="win-restart-button">VOLTAR AO INÍCIO</button>
+        </div>
+
+        <div id="hiding-overlay" class="hidden">
+            <div class="breathing-vignette"></div>
+            <p class="hiding-text">VOCÊ ESTÁ ESCONDIDO...</p>
+        </div>
+    </div>
+
+    <!-- Script principal como arquivo normal -->
+    <script src="game.js"></script>
+</body>
+
+</html>

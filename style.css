@@ -1,0 +1,200 @@
+:root {
+    --primary-red: #8b0000;
+    --dark-bg: #050505;
+    --text-color: #e0e0e0;
+    --glitch-color: #ff0000;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    cursor: none; /* Oculta o cursor para imersão, o PointerLock cuidará disso */
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    font-family: 'Outfit', sans-serif;
+    overflow: hidden;
+    user-select: none;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+/* HUD Styles */
+#hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+#timer-container {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-left: 4px solid var(--primary-red);
+    clip-path: polygon(0 0, 90% 0, 100% 20%, 100% 100%, 0 100%);
+}
+
+#timer-label {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    opacity: 0.7;
+}
+
+#timer-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+#stamina-bar-container {
+    width: 200px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    margin-top: 10px;
+}
+
+#stamina-bar {
+    width: 100%;
+    height: 100%;
+    background: var(--primary-red);
+    transition: width 0.1s linear;
+}
+
+#interaction-prompt {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 8px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: none;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+/* Overlays */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    transition: opacity 0.5s ease;
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none !important;
+}
+
+h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 5rem;
+    margin-bottom: 10px;
+    letter-spacing: 10px;
+    text-transform: uppercase;
+}
+
+button {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 15px 40px;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 30px;
+}
+
+button:hover {
+    background: var(--primary-red);
+    border-color: var(--primary-red);
+    box-shadow: 0 0 20px rgba(139, 0, 0, 0.6);
+}
+
+#controls-hint {
+    margin-top: 40px;
+    font-size: 0.8rem;
+    opacity: 0.4;
+}
+
+/* Glitch Effect */
+.glitch {
+    position: relative;
+}
+
+.glitch::before, .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+/* Game State Colors */
+.death-text { color: var(--primary-red); }
+.win-text { color: #4CAF50; }
+
+/* Hiding Overlay */
+#hiding-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 50;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+.breathing-vignette {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    box-shadow: inset 0 0 150px 100px rgba(0,0,0,1);
+    animation: breathe 4s infinite ease-in-out;
+}
+
+@keyframes breathe {
+    0%, 100% { box-shadow: inset 0 0 150px 100px rgba(0,0,0,1); }
+    50% { box-shadow: inset 0 0 250px 150px rgba(0,0,0,1); }
+}
+
+.hiding-text {
+    font-size: 0.7rem;
+    letter-spacing: 5px;
+    opacity: 0.5;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.6; }
+}
