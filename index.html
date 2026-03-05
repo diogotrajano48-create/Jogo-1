@@ -27,6 +27,9 @@
             <div id="stamina-bar-container">
                 <div id="stamina-bar"></div>
             </div>
+            <div id="ammo-container" style="margin-top: 10px; font-size: 0.8rem; color: #fff; letter-spacing: 1px;">
+                MUNIDEZ: <span id="ammo-status">CARREGADA</span>
+            </div>
             <div id="interaction-prompt">Pressione [E] para Interagir</div>
         </div>
 
@@ -37,6 +40,20 @@
             <div id="controls-hint">
                 [W,A,S,D] Movimento | [SHIFT] Correr | [E] Esconder | [Mouse] Olhar
             </div>
+        </div>
+
+        <div id="qte-overlay" class="overlay hidden">
+            <h2 style="color: #fff; margin-bottom: 20px; letter-spacing: 5px;">ESCAPE!</h2>
+            <div id="qte-container">
+                <div id="qte-ring"></div>
+                <div id="qte-target"></div>
+                <div id="qte-needle"></div>
+            </div>
+            <div style="width: 200px; height: 4px; background: rgba(255,255,255,0.1); margin-top: 15px;">
+                <div id="qte-timer-bar"
+                    style="width: 100%; height: 100%; background: #fff; transition: width 0.1s linear;"></div>
+            </div>
+            <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.8;">Pressione [ESPAÇO] no momento certo!</p>
         </div>
 
         <div id="game-over-overlay" class="overlay hidden">
@@ -51,7 +68,11 @@
 
         <div id="hiding-overlay" class="hidden">
             <div class="breathing-vignette"></div>
-            <p class="hiding-text">VOCÊ ESTÁ ESCONDIDO...</p>
+            <div style="text-align: center;">
+                <p class="hiding-text">VOCÊ SERÁ EXPULSO EM:</p>
+                <p id="hiding-timer"
+                    style="font-size: 0.9rem; letter-spacing: 2px; opacity: 0.8; margin-top: 10px; color: #ff0000;"></p>
+            </div>
         </div>
     </div>
 

@@ -9,7 +9,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    cursor: none; /* Oculta o cursor para imersão, o PointerLock cuidará disso */
+    cursor: none;
+    /* Oculta o cursor para imersão, o PointerLock cuidará disso */
 }
 
 body {
@@ -144,7 +145,8 @@ button:hover {
     position: relative;
 }
 
-.glitch::before, .glitch::after {
+.glitch::before,
+.glitch::after {
     content: attr(data-text);
     position: absolute;
     top: 0;
@@ -155,8 +157,13 @@ button:hover {
 }
 
 /* Game State Colors */
-.death-text { color: var(--primary-red); }
-.win-text { color: #4CAF50; }
+.death-text {
+    color: var(--primary-red);
+}
+
+.win-text {
+    color: #4CAF50;
+}
 
 /* Hiding Overlay */
 #hiding-overlay {
@@ -178,13 +185,20 @@ button:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    box-shadow: inset 0 0 150px 100px rgba(0,0,0,1);
+    box-shadow: inset 0 0 150px 100px rgba(0, 0, 0, 1);
     animation: breathe 4s infinite ease-in-out;
 }
 
 @keyframes breathe {
-    0%, 100% { box-shadow: inset 0 0 150px 100px rgba(0,0,0,1); }
-    50% { box-shadow: inset 0 0 250px 150px rgba(0,0,0,1); }
+
+    0%,
+    100% {
+        box-shadow: inset 0 0 150px 100px rgba(0, 0, 0, 1);
+    }
+
+    50% {
+        box-shadow: inset 0 0 250px 150px rgba(0, 0, 0, 1);
+    }
 }
 
 .hiding-text {
@@ -195,6 +209,52 @@ button:hover {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 0.2; }
-    50% { opacity: 0.6; }
+
+    0%,
+    100% {
+        opacity: 0.2;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* QTE Quick Time Event */
+#qte-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#qte-ring {
+    width: 100%;
+    height: 100%;
+    border: 8px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+#qte-target {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 8px solid transparent;
+    border-top-color: var(--primary-red);
+    border-radius: 50%;
+    transform: rotate(45deg);
+    /* Posição do alvo */
+    box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
+}
+
+#qte-needle {
+    position: absolute;
+    width: 4px;
+    height: 50%;
+    background: #fff;
+    bottom: 50%;
+    transform-origin: bottom center;
+    box-shadow: 0 0 10px #fff;
 }
