@@ -25,6 +25,10 @@ let hidingGlobalCooldown = 0;
 let hasBullet = true;
 let reloadTimer = 0;
 let stalkerStunTimer = 0;
+let stalkerStuckTimer = 0;
+let stalkerDecisionTimer = 0;
+let stalkerLastPos = new THREE.Vector3();
+let stalkerBypassDir = new THREE.Vector3();
 let raycaster = new THREE.Raycaster(); // Cooldown de 30s para entrar de novo
 
 // Elementos DOM
@@ -464,21 +468,34 @@ function updateStalker(delta) {
     dir.y = 0;
     dir.normalize();
 
-    const moveStep = dir.multiplyScalar(spd * delta);
+    // Detecção de Estancamento
+    const distMoved = stalker.position.distanceTo(stalkerLastPos);
+    stalkerLastPos.copy(stalker.position);
+    if (distMoved < spd * delta * 0.4) stalkerStuckTimer += delta;
+    else stalkerStuckTimer = Math.max(0, stalkerStuckTimer - delta);
+
+    let finalDir = dir.clone();
+    if (stalkerStuckTimer > 0.3) {
+        if (stalkerDecisionTimer <= 0) {
+            const side = new THREE.Vector3(dir.z, 0, -dir.x);
+            const test = stalker.position.clone().add(side.clone().multiplyScalar(2));
+            stalkerBypassDir.copy(checkCollision(test, 0.8) ? side.negate() : side).normalize();
+            stalkerDecisionTimer = 1.0;
+        }
+        finalDir.add(stalkerBypassDir.multiplyScalar(1.5)).normalize();
+    }
+    if (stalkerDecisionTimer > 0) stalkerDecisionTimer -= delta;
+
+    const moveStep = finalDir.multiplyScalar(spd * delta);
     const oldPos = stalker.position.clone();
 
-    // Movimentação com Colisão para o Stalker (Eixo X)
     stalker.position.x += moveStep.x;
-    if (checkCollision(stalker.position, 0.6)) {
-        stalker.position.x = oldPos.x;
-    }
+    if (checkCollision(stalker.position, 0.6)) stalker.position.x = oldPos.x;
 
-    // Movimentação com Colisão para o Stalker (Eixo Z)
     stalker.position.z += moveStep.z;
     if (checkCollision(stalker.position, 0.6)) {
         stalker.position.z = oldPos.z;
-        // Se bater na parede enquanto vaga, mude o alvo para não ficar preso
-        if (isHiding && Math.random() > 0.98) setStalkerWanderTarget();
+        if (isHiding && Math.random() > 0.95) setStalkerWanderTarget();
     }
 
     stalker.lookAt(targetPos.x, 1.4, targetPos.z);
@@ -549,14 +566,17 @@ function successQTE() {
     hasSecondChance = false;
     qteOverlay.classList.add('hidden');
 
-    // Teleportar stalker para os corredores abertos das extremidades do mapa
-    // Posições 44 ou -44 são garantidamente espaços vazios no layout 25x25
-    const safePos = 44;
-    const farX = camera.position.x > 0 ? -safePos : safePos;
-    const farZ = camera.position.z > 0 ? -safePos : safePos;
+    // Teleportar stalker para os cantos GARANTIDAMENTE abertos do layout fixo
+    // Coordenadas -46 e 42 correspondem aos índices 1 e 23 da matriz (sempre '.')
+    const farX = camera.position.x > 0 ? -46 : 42;
+    const farZ = camera.position.z > 0 ? -46 : 42;
 
     stalker.position.set(farX, 1.4, farZ);
     stalkerWanderTarget.set(farX, 1.4, farZ);
+
+    // Reseta inteligência de desvio
+    stalkerStuckTimer = 0;
+    stalkerDecisionTimer = 0;
 
     playScareSound();
     controls.lock();
