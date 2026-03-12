@@ -1,5 +1,5 @@
 // --- CONFIGURAÇÃO INICIAL (Versão Global Three.js) ---
-let scene, camera, renderer, controls;
+let scene, camera, renderer, controls, gun;
 let stalker, cabinets = [], walls = [];
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false, isRunning = false;
 let prevTime = performance.now();
@@ -133,6 +133,7 @@ function init() {
 
     createStalker();
     createMaze();
+    createGun();
     setupEventListeners();
 
     // Iniciar loop de renderização para garantir o visual imediato
@@ -229,6 +230,39 @@ function createStalker() {
     stalker.add(light);
     stalker.position.set(40, 1.4, 40);
     scene.add(stalker);
+}
+
+function createGun() {
+    gun = new THREE.Group();
+
+    // Cano da arma
+    const barrel = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1, 0.1, 0.5),
+        new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 })
+    );
+    barrel.position.set(0, 0, -0.25);
+    gun.add(barrel);
+
+    // Corpo da arma
+    const body = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 0.15, 0.2),
+        new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.5 })
+    );
+    body.position.set(0, -0.02, 0);
+    gun.add(body);
+
+    // Cabo
+    const handle = new THREE.Mesh(
+        new THREE.BoxGeometry(0.08, 0.2, 0.1),
+        new THREE.MeshStandardMaterial({ color: 0x111111 })
+    );
+    handle.position.set(0, -0.15, 0.05);
+    handle.rotation.x = -Math.PI / 8;
+    gun.add(handle);
+
+    // Posicionamento na tela (primeira pessoa)
+    gun.position.set(0.3, -0.25, -0.4);
+    camera.add(gun);
 }
 
 function setupEventListeners() {
@@ -369,6 +403,19 @@ function animate() {
         if (stalkerStunTimer > 0) {
             stalkerStunTimer = Math.max(0, stalkerStunTimer - delta);
         }
+
+        // Animação da arma (Bobbing)
+        if (gun) {
+            const bobPeriod = isRunning ? 10 : 5;
+            const bobAmp = isRunning ? 0.02 : 0.01;
+            if (moveForward || moveBackward || moveLeft || moveRight) {
+                gun.position.y = -0.25 + Math.sin(walkTime * 1.2) * bobAmp;
+                gun.position.x = 0.3 + Math.cos(walkTime * 0.6) * (bobAmp * 0.5);
+            } else {
+                gun.position.y = THREE.MathUtils.lerp(gun.position.y, -0.25, 0.1);
+                gun.position.x = THREE.MathUtils.lerp(gun.position.x, 0.3, 0.1);
+            }
+        }
     }
 
     if (isQTEActive) {
@@ -416,9 +463,11 @@ function updatePlayer(delta) {
     const oldPos = camera.position.clone();
 
     // Movimentação Lateral com Colisão
+    const posBeforeSide = camera.position.clone();
     controls.moveRight(-velocity.x * delta);
     if (checkCollision(camera.position, playerRadius)) {
-        camera.position.copy(oldPos);
+        camera.position.copy(posBeforeSide);
+        velocity.x = 0; // Zera a velocidade para não "grudar"
     }
 
     // Movimentação Frontal com Colisão
@@ -426,6 +475,7 @@ function updatePlayer(delta) {
     controls.moveForward(-velocity.z * delta);
     if (checkCollision(camera.position, playerRadius)) {
         camera.position.copy(posAfterSide);
+        velocity.z = 0; // Zera a velocidade para não "grudar"
     }
 
     if (moveForward || moveBackward || moveLeft || moveRight) {
@@ -475,14 +525,26 @@ function updateStalker(delta) {
     else stalkerStuckTimer = Math.max(0, stalkerStuckTimer - delta);
 
     let finalDir = dir.clone();
-    if (stalkerStuckTimer > 0.3) {
+    if (stalkerStuckTimer > 0.4) {
         if (stalkerDecisionTimer <= 0) {
-            const side = new THREE.Vector3(dir.z, 0, -dir.x);
-            const test = stalker.position.clone().add(side.clone().multiplyScalar(2));
-            stalkerBypassDir.copy(checkCollision(test, 0.8) ? side.negate() : side).normalize();
-            stalkerDecisionTimer = 1.0;
+            // Tenta 8 direções diferentes para achar um escape livre
+            let bestBypass = new THREE.Vector3();
+            let found = false;
+            for (let i = 0; i < 8; i++) {
+                let angle = (i / 8) * Math.PI * 2;
+                let testDir = new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle));
+                let testPos = stalker.position.clone().add(testDir.clone().multiplyScalar(4));
+                if (!checkCollision(testPos, 0.8)) {
+                    bestBypass.copy(testDir);
+                    found = true;
+                    // Se essa direção ajuda a chegar perto do alvo, prioriza ela
+                    if (testDir.dot(dir) > 0.5) break;
+                }
+            }
+            stalkerBypassDir.copy(found ? bestBypass : new THREE.Vector3(dir.z, 0, -dir.x)).normalize();
+            stalkerDecisionTimer = 1.5; // Mantém a decisão por 1.5s
         }
-        finalDir.add(stalkerBypassDir.multiplyScalar(1.5)).normalize();
+        finalDir.lerp(stalkerBypassDir, 0.7).normalize();
     }
     if (stalkerDecisionTimer > 0) stalkerDecisionTimer -= delta;
 
@@ -490,12 +552,38 @@ function updateStalker(delta) {
     const oldPos = stalker.position.clone();
 
     stalker.position.x += moveStep.x;
-    if (checkCollision(stalker.position, 0.6)) stalker.position.x = oldPos.x;
+    if (checkCollision(stalker.position, 0.7)) { // Raio um pouco maior para evitar bicos
+        stalker.position.x = oldPos.x;
+        stalkerStuckTimer += delta * 2; // Penaliza mais a colisão lateral
+    }
 
     stalker.position.z += moveStep.z;
-    if (checkCollision(stalker.position, 0.6)) {
+    if (checkCollision(stalker.position, 0.7)) {
         stalker.position.z = oldPos.z;
+        stalkerStuckTimer += delta * 2;
         if (isHiding && Math.random() > 0.95) setStalkerWanderTarget();
+    }
+
+    // --- NOVO: RECOVERY FAILSAFE ---
+    if (stalkerStuckTimer > 5.0) {
+        // Se ficou preso por 5 segundos, teleporta para um dos cantos do mapa longe do player
+        const spawns = [
+            { x: -46, z: -46 }, { x: 42, z: -46 },
+            { x: -46, z: 42 }, { x: 42, z: 42 }
+        ];
+        let bestSpawn = spawns[0];
+        let maxD = 0;
+        spawns.forEach(s => {
+            let d = camera.position.distanceTo(new THREE.Vector3(s.x, 1.6, s.z));
+            if (d > maxD) {
+                maxD = d;
+                bestSpawn = s;
+            }
+        });
+        stalker.position.set(bestSpawn.x, 1.4, bestSpawn.z);
+        stalkerStuckTimer = 0;
+        stalkerDecisionTimer = 0;
+        if (isHiding) setStalkerWanderTarget();
     }
 
     stalker.lookAt(targetPos.x, 1.4, targetPos.z);
@@ -617,6 +705,18 @@ function shoot() {
 
         // Efeito visual de tremor rápido
         camera.position.x += (Math.random() - 0.5) * 0.2;
+    }
+
+    // Coice da arma
+    if (gun) {
+        gun.position.z += 0.1;
+        gun.rotation.x -= 0.2;
+        setTimeout(() => {
+            if (gun) {
+                gun.position.z = -0.4;
+                gun.rotation.x = 0;
+            }
+        }, 100);
     }
 }
 
